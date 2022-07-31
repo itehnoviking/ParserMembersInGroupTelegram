@@ -12,9 +12,6 @@ foreach (var (id, chat) in chats.chats)
 {
     switch (chat)
     {
-        case Chat basicChat when basicChat.IsActive:
-            Console.WriteLine($"{id}:  Basic chat: {basicChat.title} with {basicChat.participants_count} members");
-            break;
         case Channel group when group.IsGroup:
             Console.WriteLine($"{id}: Group {group.username}: {group.title}");
             break;
@@ -25,16 +22,22 @@ Console.Write("Type a chat ID: ");
 var groupId = long.Parse(Console.ReadLine());
 var channel = (Channel)chats.chats[groupId];
 
+var dictionaryMembers = new Dictionary<long, string>();
+
 var partcipants = await client.Channels_GetAllParticipants(channel);
+
 foreach (var (id, user) in partcipants.users)
 {
     if (user.username != null)
     {
-        using (StreamWriter writer = new StreamWriter(PATH, true))
-        {
-            await writer.WriteLineAsync($"{user.id}, @{user.username}");
-        }
-
+        dictionaryMembers.Add(user.id, user.username);
     }
-    
-}  
+}
+
+using (StreamWriter writer = new StreamWriter(PATH, true))
+{
+    foreach (var member in dictionaryMembers)
+    {
+        await writer.WriteLineAsync($"{member.Key}, @{member.Value}");
+    }
+}
